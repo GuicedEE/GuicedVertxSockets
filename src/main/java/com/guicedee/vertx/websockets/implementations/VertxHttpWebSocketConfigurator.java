@@ -5,19 +5,25 @@ import com.google.inject.Key;
 import com.guicedee.client.Environment;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.guicedinjection.interfaces.IGuicePostStartup;
+import com.guicedee.guicedservlets.websockets.options.CallScopeProperties;
 import com.guicedee.guicedservlets.websockets.options.IGuicedWebSocket;
 import com.guicedee.vertx.spi.VertxHttpServerConfigurator;
+import com.guicedee.vertx.spi.VertxHttpServerOptionsConfigurator;
+import com.guicedee.vertx.spi.VertxRouterConfigurator;
 import com.guicedee.vertx.websockets.GuicedWebSocket;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.ServerWebSocket;
+import io.vertx.ext.web.Router;
 import lombok.extern.java.Log;
 
 import static com.guicedee.guicedservlets.websockets.options.IGuicedWebSocket.EveryoneGroup;
 
 @Log
 public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHttpWebSocketConfigurator>,
-                                                       VertxHttpServerConfigurator
+                                                       VertxHttpServerConfigurator, VertxRouterConfigurator,
+                                                       VertxHttpServerOptionsConfigurator
 {
     @Inject
     Vertx vertx;
@@ -43,7 +49,8 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
                     try
                     {
                         callScoper.enter();
-                        callScoper.scope(Key.get(ServerWebSocket.class), () -> ctx);
+                        CallScopeProperties properties = IGuiceContext.get(CallScopeProperties.class);
+                        properties.getProperties().put("ServerWebSocket", ctx);
                         GuicedWebSocket guicedWebSocket = (GuicedWebSocket) IGuiceContext.get(IGuicedWebSocket.class);
                         guicedWebSocket.receiveMessage(msg);
                     }finally
@@ -65,10 +72,11 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
                      .consumer(EveryoneGroup, message -> {
                          ctx.writeTextMessage((String) message.body());
                      });
-                /*vertx.eventBus()
+                vertx.eventBus()
                      .consumer(id, message -> {
                          ctx.writeTextMessage((String) message.body());
-                     });*/
+                     });
+
                 System.out.println("Connected - " + id);
             }
             finally
@@ -76,6 +84,19 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
                 callScoper.exit();
             }
         });
+        return builder;
+    }
+
+    @Override
+    public Router builder(Router builder)
+    {
+        return builder;
+    }
+
+    @Override
+    public HttpServerOptions builder(HttpServerOptions builder)
+    {
+        builder.setRegisterWebSocketWriteHandlers(true);
         return builder;
     }
 }
