@@ -12,14 +12,9 @@ import io.vertx.core.http.ServerWebSocket;
 
 public class VertxWebSocketsModule extends AbstractModule implements IGuiceModule<VertxWebSocketsModule>
 {
-    private final CallScoper callScope = new CallScoper();
-
     @Override
     protected void configure()
     {
-        super.configure();
-        bindScope(CallScope.class, callScope);
-        bind(CallScopeProperties.class).in(CallScope.class);
         bind(ServerWebSocket.class).toProvider(() -> (ServerWebSocket) IGuiceContext.get(CallScopeProperties.class)
                                                                                     .getProperties()
                                                                                     .get("ServerWebSocket"))

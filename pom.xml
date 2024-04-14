@@ -20,7 +20,7 @@
 
     <properties>
         <ignore.moditect>true</ignore.moditect>
-        <flatten.pom>false</flatten.pom>
+        <flatten.pom>true</flatten.pom>
     </properties>
 
     <dependencies>
