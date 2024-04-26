@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Key;
 import com.google.inject.Singleton;
 import com.guicedee.client.CallScoper;
-import com.guicedee.client.Environment;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.guicedinjection.interfaces.IGuicePostStartup;
 import com.guicedee.guicedservlets.websockets.options.CallScopeProperties;
@@ -26,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.guicedee.guicedservlets.websockets.options.CallScopeSource.WebSocket;
 import static com.guicedee.guicedservlets.websockets.options.IGuicedWebSocket.EveryoneGroup;
 
 @Log
@@ -57,6 +57,7 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
                 callScoper.scope(Key.get(ServerWebSocket.class), () -> ctx);
                 CallScopeProperties properties = IGuiceContext.get(CallScopeProperties.class);
                 String id = ctx.textHandlerID();
+                properties.setSource(WebSocket);
 
                 if (!groupConsumers.containsKey(EveryoneGroup))
                 {
