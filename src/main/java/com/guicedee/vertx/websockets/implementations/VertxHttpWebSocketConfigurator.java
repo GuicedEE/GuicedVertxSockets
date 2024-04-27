@@ -94,11 +94,9 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
                    })
                    .exceptionHandler((e) -> {
                        groupConsumers.get(EveryoneGroup).remove(personalSocketSender);
-                       System.out.println("Closed, restarting in 10 seconds");
                    })
                    .closeHandler((__) -> {
                        groupConsumers.get(EveryoneGroup).remove(personalSocketSender);
-                       System.out.println("Closed, restarting in 10 seconds");
                    });
                 log.fine("Client connected: " + ctx.remoteAddress() + " / " + id);
                 //add to default groups, everyone and me
