@@ -47,6 +47,8 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
     @Override
     public void removeFromGroup(String groupName)
     {
+        ServerWebSocket serverWebSocket = (ServerWebSocket) callScopeProperties.getProperties()
+                                                                               .get("ServerWebSocket");
 
     }
 
