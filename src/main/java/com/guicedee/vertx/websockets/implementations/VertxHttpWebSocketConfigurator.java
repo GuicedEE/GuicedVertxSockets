@@ -53,6 +53,10 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
         builder.webSocketHandler((ctx) -> {
             try
             {
+                if (vertx == null)
+                {
+                    IGuiceContext.instance().inject().injectMembers(this);
+                }
                 callScoper.enter();
                 callScoper.scope(Key.get(ServerWebSocket.class), () -> ctx);
                 CallScopeProperties properties = IGuiceContext.get(CallScopeProperties.class);
