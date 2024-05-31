@@ -8,6 +8,7 @@ import com.guicedee.guicedservlets.websockets.options.CallScopeProperties;
 import com.guicedee.guicedservlets.websockets.options.IGuicedWebSocket;
 import com.guicedee.guicedservlets.websockets.options.WebSocketMessageReceiver;
 import com.guicedee.guicedservlets.websockets.services.IWebSocketMessageReceiver;
+import com.guicedee.vertx.websockets.implementations.VertxHttpWebSocketConfigurator;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.ServerWebSocket;
@@ -28,28 +29,18 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
     @Inject
     Vertx vertx;
 
-    private Set<String> listedGroups = new HashSet<>();
-
     @Override
     public void addToGroup(String groupName)
     {
-        if (listedGroups.contains(groupName))
-        {
-            vertx.eventBus()
-                 .consumer(groupName, message -> {
-                     ServerWebSocket serverWebSocket = (ServerWebSocket) callScopeProperties.getProperties()
-                                                                                            .get("ServerWebSocket");
-                     serverWebSocket.writeTextMessage((String) message.body());
-                 });
-        }
+        ServerWebSocket serverWebSocket1 = IGuiceContext.get(ServerWebSocket.class);
+        VertxHttpWebSocketConfigurator.addToGroup(groupName, serverWebSocket1);
     }
 
     @Override
     public void removeFromGroup(String groupName)
     {
-        ServerWebSocket serverWebSocket = (ServerWebSocket) callScopeProperties.getProperties()
-                                                                               .get("ServerWebSocket");
-
+        ServerWebSocket serverWebSocket1 = IGuiceContext.get(ServerWebSocket.class);
+        VertxHttpWebSocketConfigurator.removeFromGroup(groupName, serverWebSocket1);
     }
 
     /**
@@ -61,7 +52,7 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
     public void broadcastMessage(String groupName, String message)
     {
         vertx.eventBus()
-             .publish(groupName, message);
+             .send(groupName, message);
     }
 
     /**
@@ -93,6 +84,9 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
         {
             WebSocketMessageReceiver<?> messageReceived = IGuiceContext.get(ObjectMapper.class)
                                                                        .readValue(message, WebSocketMessageReceiver.class);
+            String requestContextId = callScopeProperties.getProperties()
+                                                         .get("RequestContextId").toString();
+            messageReceived.setBroadcastGroup(requestContextId);
             if (messageListeners.containsKey(messageReceived.getAction()))
             {
                 for (Class<? extends IWebSocketMessageReceiver> iWebSocketMessageReceiver : messageListeners.get(messageReceived.getAction()))

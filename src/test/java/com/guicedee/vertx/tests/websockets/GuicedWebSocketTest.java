@@ -7,7 +7,6 @@ import com.guicedee.guicedservlets.websockets.options.WebSocketMessageReceiver;
 import com.guicedee.services.jsonrepresentation.IJsonRepresentation;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.WebSocketClient;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -50,7 +49,6 @@ class GuicedWebSocketTest
                         {
                             throw new RuntimeException(e);
                         }
-
                     }
 
                     @Override

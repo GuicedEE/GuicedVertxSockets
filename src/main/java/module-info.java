@@ -5,10 +5,13 @@ import com.guicedee.vertx.websockets.implementations.VertxHttpWebSocketConfigura
 import com.guicedee.vertx.websockets.implementations.VertxWebSocketsModule;
 
 module guiced.vertx.sockets {
+
+    exports com.guicedee.vertx.websockets;
+
     uses com.guicedee.guicedservlets.websockets.services.IWebSocketMessageReceiver;
     uses com.guicedee.guicedservlets.servlets.services.IOnCallScopeEnter;
     uses com.guicedee.guicedservlets.servlets.services.IOnCallScopeExit;
-    requires guiced.vertx;
+    requires transitive guiced.vertx;
     requires transitive com.guicedee.client;
     requires io.vertx;
 
