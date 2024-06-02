@@ -135,7 +135,7 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
         return messageListeners.containsKey(name);
     }
 
-    private void addReceiver(IWebSocketMessageReceiver messageReceiver, String action)
+    public void addReceiver(IWebSocketMessageReceiver messageReceiver, String action)
     {
         if (!messageListeners.containsKey(action))
         {
@@ -144,6 +144,5 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
         messageListeners.get(action)
                         .add(messageReceiver.getClass());
     }
-
 
 }
