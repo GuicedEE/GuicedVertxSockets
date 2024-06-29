@@ -169,10 +169,10 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
 
             CallScopeProperties props = IGuiceContext.get(CallScopeProperties.class);
             props.setSource(properties.getSource());
-            props.getProperties()
-                 .putAll(properties.getProperties());
             properties.getProperties()
                       .put("ServerWebSocket", ctx);
+            props.getProperties()
+                 .putAll(properties.getProperties());
             GuicedWebSocket guicedWebSocket = (GuicedWebSocket) IGuiceContext.get(IGuicedWebSocket.class);
             guicedWebSocket.receiveMessage(msg);
         }

@@ -14,15 +14,12 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.ServerWebSocket;
 import lombok.extern.java.Log;
 
-import java.util.*;
 import java.util.logging.Level;
 
 @CallScope
 @Log
 public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocket
 {
-    private static final Map<String, Set<Class<? extends IWebSocketMessageReceiver>>> messageListeners = new HashMap<>();
-
     @Inject
     private CallScopeProperties callScopeProperties;
 
@@ -56,6 +53,19 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
     }
 
     /**
+     * Broadcast a given message to the web socket of the current context id
+     *
+     * @param message The message to send
+     */
+    public void broadcastMessage(String message)
+    {
+        vertx.eventBus()
+             .send(callScopeProperties.getProperties()
+                                      .get("RequestContextId")
+                                      .toString(), message);
+    }
+
+    /**
      * Broadcast a given message to the web socket
      *
      * @param groupName The broadcast group to send to
@@ -69,23 +79,13 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
 
     public void receiveMessage(String message)
     {
-        if (messageListeners.isEmpty())
-        {
-            try
-            {
-                loadWebSocketReceivers();
-            }
-            catch (Throwable T)
-            {
-                log.log(Level.SEVERE, "Failed to load WebSocketReceivers", T);
-            }
-        }
         try
         {
             WebSocketMessageReceiver<?> messageReceived = IGuiceContext.get(ObjectMapper.class)
                                                                        .readValue(message, WebSocketMessageReceiver.class);
             String requestContextId = callScopeProperties.getProperties()
-                                                         .get("RequestContextId").toString();
+                                                         .get("RequestContextId")
+                                                         .toString();
             messageReceived.setBroadcastGroup(requestContextId);
             if (messageListeners.containsKey(messageReceived.getAction()))
             {
@@ -95,7 +95,8 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
                     messageReceiver.receiveMessage(messageReceived);
                 }
             }
-            else {
+            else
+            {
                 log.warning("No web socket action registered for " + messageReceived.getAction());
             }
         }
@@ -105,44 +106,5 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
         }
     }
 
-    public void loadWebSocketReceivers()
-    {
-        if (messageListeners.isEmpty())
-        {
-            Set<IWebSocketMessageReceiver> messageReceivers = IGuiceContext
-                    .instance()
-                    .getLoader(IWebSocketMessageReceiver.class, ServiceLoader.load(IWebSocketMessageReceiver.class));
-            for (IWebSocketMessageReceiver messageReceiver : messageReceivers)
-            {
-                for (String s : messageReceiver.messageNames())
-                {
-                    addReceiver(messageReceiver, s);
-                }
-            }
-        }
-    }
-
-    public void addWebSocketMessageReceiver(IWebSocketMessageReceiver receiver)
-    {
-        for (String messageName : receiver.messageNames())
-        {
-            addReceiver(receiver, messageName);
-        }
-    }
-
-    public boolean isWebSocketReceiverRegistered(String name)
-    {
-        return messageListeners.containsKey(name);
-    }
-
-    public void addReceiver(IWebSocketMessageReceiver messageReceiver, String action)
-    {
-        if (!messageListeners.containsKey(action))
-        {
-            messageListeners.put(action, new HashSet<>());
-        }
-        messageListeners.get(action)
-                        .add(messageReceiver.getClass());
-    }
 
 }
