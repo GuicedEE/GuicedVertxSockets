@@ -87,12 +87,13 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
                                                          .get("RequestContextId")
                                                          .toString();
             messageReceived.setBroadcastGroup(requestContextId);
-            if (messageListeners.containsKey(messageReceived.getAction()))
+            if (IGuicedWebSocket.getMessagesListeners()
+                                .containsKey(messageReceived.getAction()))
             {
-                for (Class<? extends IWebSocketMessageReceiver> iWebSocketMessageReceiver : messageListeners.get(messageReceived.getAction()))
+                for (IWebSocketMessageReceiver iWebSocketMessageReceiver : IGuicedWebSocket.getMessagesListeners()
+                                                                                           .get(messageReceived.getAction()))
                 {
-                    IWebSocketMessageReceiver messageReceiver = IGuiceContext.get(iWebSocketMessageReceiver);
-                    messageReceiver.receiveMessage(messageReceived);
+                    iWebSocketMessageReceiver.receiveMessage(messageReceived);
                 }
             }
             else
