@@ -7,7 +7,6 @@ import com.guicedee.guicedservlets.servlets.services.scopes.CallScope;
 import com.guicedee.guicedservlets.websockets.options.CallScopeProperties;
 import com.guicedee.guicedservlets.websockets.options.IGuicedWebSocket;
 import com.guicedee.guicedservlets.websockets.options.WebSocketMessageReceiver;
-import com.guicedee.guicedservlets.websockets.services.IWebSocketMessageReceiver;
 import com.guicedee.vertx.websockets.implementations.VertxHttpWebSocketConfigurator;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
@@ -90,11 +89,9 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
             if (IGuicedWebSocket.getMessagesListeners()
                                 .containsKey(messageReceived.getAction()))
             {
-                for (IWebSocketMessageReceiver iWebSocketMessageReceiver : IGuicedWebSocket.getMessagesListeners()
-                                                                                           .get(messageReceived.getAction()))
-                {
-                    iWebSocketMessageReceiver.receiveMessage(messageReceived);
-                }
+                IGuicedWebSocket.getMessagesListeners()
+                                .get(messageReceived.getAction())
+                                .receiveMessage(messageReceived);
             }
             else
             {
