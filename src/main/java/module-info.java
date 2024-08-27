@@ -1,7 +1,7 @@
 import com.guicedee.guicedinjection.interfaces.IGuiceModule;
 import com.guicedee.guicedinjection.interfaces.IGuicePostStartup;
 import com.guicedee.vertx.spi.VertxHttpServerOptionsConfigurator;
-import com.guicedee.vertx.websockets.implementations.VertxHttpWebSocketConfigurator;
+import com.guicedee.vertx.websockets.VertxHttpWebSocketConfigurator;
 import com.guicedee.vertx.websockets.implementations.VertxWebSocketsModule;
 
 module guiced.vertx.sockets {

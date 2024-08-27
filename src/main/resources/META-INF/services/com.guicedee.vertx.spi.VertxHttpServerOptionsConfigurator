@@ -1,1 +1,1 @@
-com.guicedee.vertx.websockets.implementations.VertxHttpWebSocketConfigurator
+com.guicedee.vertx.websockets.VertxHttpWebSocketConfigurator

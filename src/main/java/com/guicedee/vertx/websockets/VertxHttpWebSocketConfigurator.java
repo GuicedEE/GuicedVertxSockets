@@ -1,4 +1,4 @@
-package com.guicedee.vertx.websockets.implementations;
+package com.guicedee.vertx.websockets;
 
 import com.google.inject.Inject;
 import com.google.inject.Key;
@@ -11,7 +11,6 @@ import com.guicedee.guicedservlets.websockets.options.IGuicedWebSocket;
 import com.guicedee.vertx.spi.VertxHttpServerConfigurator;
 import com.guicedee.vertx.spi.VertxHttpServerOptionsConfigurator;
 import com.guicedee.vertx.spi.VertxRouterConfigurator;
-import com.guicedee.vertx.websockets.GuicedWebSocket;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
@@ -42,8 +41,9 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
     @Inject
     CallScoper callScoper;
 
-    private static final Map<String, List<MessageConsumer<String>>> groupConsumers = new HashMap<>();
-    private static final Map<String, List<ServerWebSocket>> groupSockets = new HashMap<>();
+    public static final Map<String, List<MessageConsumer<String>>> groupConsumers = new HashMap<>();
+    public static final Map<String, List<ServerWebSocket>> groupSockets = new HashMap<>();
+    public static final Map<String, CallScopeProperties> groupCallScopeProperties = new HashMap<>();
 
     @Override
     public List<CompletableFuture<Boolean>> postLoad()
@@ -118,6 +118,7 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
 
                 //create my group id on connect
                 groupConsumers.put(id, new ArrayList<>());
+                groupCallScopeProperties.put(id, properties);
                 MessageConsumer<String> personalSocketSender = vertx.eventBus()
                                                                     .consumer(id, message -> {
                                                                         //send only to me
@@ -136,6 +137,7 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
                        groupSockets.get(EveryoneGroup)
                                    .remove(ctx);
                        groupConsumers.remove(id);
+                       groupCallScopeProperties.remove(id);
                        groupSockets.forEach((key,value)->{
                            value.removeIf(a->a.textHandlerID().equals(id));
                        });
@@ -146,6 +148,7 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
                        groupSockets.get(EveryoneGroup)
                                    .remove(ctx);
                        groupConsumers.remove(id);
+                       groupCallScopeProperties.remove(id);
                    });
 
                 log.fine("Client connected: " + ctx.remoteAddress() + " / " + id);
