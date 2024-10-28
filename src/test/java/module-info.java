@@ -3,7 +3,7 @@ module guiced.vertx.tests.sockets {
     requires com.google.guice;
     requires org.junit.jupiter.api;
     requires com.guicedee.client;
-    requires io.vertx;
+    requires transitive io.vertx.core;
     requires java.net.http;
     requires com.guicedee.jsonrepresentation;
 

@@ -1,8 +1,7 @@
-import com.guicedee.guicedinjection.interfaces.IGuiceModule;
-import com.guicedee.guicedinjection.interfaces.IGuicePostStartup;
-import com.guicedee.vertx.spi.VertxHttpServerOptionsConfigurator;
-import com.guicedee.vertx.websockets.VertxHttpWebSocketConfigurator;
 import com.guicedee.vertx.websockets.implementations.VertxWebSocketsModule;
+import com.guicedee.guicedinjection.interfaces.*;
+import com.guicedee.vertx.spi.*;
+import com.guicedee.vertx.websockets.*;
 
 module guiced.vertx.sockets {
 
@@ -13,7 +12,7 @@ module guiced.vertx.sockets {
     uses com.guicedee.guicedservlets.servlets.services.IOnCallScopeExit;
     requires transitive guiced.vertx;
     requires transitive com.guicedee.client;
-    requires io.vertx;
+    requires transitive io.vertx.core;
 
     requires static lombok;
 
