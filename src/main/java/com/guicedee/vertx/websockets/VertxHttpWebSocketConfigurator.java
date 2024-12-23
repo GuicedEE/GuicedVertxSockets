@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 
 import static com.guicedee.guicedservlets.websockets.options.CallScopeSource.WebSocket;
 import static com.guicedee.guicedservlets.websockets.options.IGuicedWebSocket.EveryoneGroup;
@@ -41,6 +42,11 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
     @Inject
     CallScoper callScoper;
 
+    public Integer sortOrder()
+    {
+        return 55;
+    }
+
     public static final Map<String, List<MessageConsumer<String>>> groupConsumers = new HashMap<>();
     public static final Map<String, List<ServerWebSocket>> groupSockets = new HashMap<>();
     public static final Map<String, CallScopeProperties> groupCallScopeProperties = new HashMap<>();
@@ -53,21 +59,7 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
 
     public static void addToGroup(String group, ServerWebSocket webSocket)
     {
-        if (!groupSockets.containsKey(group))
-        {
-            groupSockets.put(group, new ArrayList<>());
-            IGuiceContext.get(Vertx.class)
-                         .eventBus()
-                         .consumer(group, message -> {
-                             List<ServerWebSocket> serverWebSockets = groupSockets.get(group);
-                             for (ServerWebSocket serverWebSocket : serverWebSockets)
-                             {
-                                 //send to everyone group
-                                 serverWebSocket.writeTextMessage((String) message.body());
-                             }
-                         });
-        }
-        groupSockets.get(group).add(webSocket);
+            configureGroupListener(IGuiceContext.get(Vertx.class), group,webSocket);
     }
 
     public static void removeFromGroup(String group, ServerWebSocket webSocket)
@@ -103,52 +95,35 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
                     groupConsumers.put(EveryoneGroup, new ArrayList<>());
                     groupSockets.put(EveryoneGroup, new ArrayList<>());
 
-                    vertx.eventBus()
-                         .consumer(EveryoneGroup, message -> {
-                             List<ServerWebSocket> serverWebSockets = groupSockets.get(EveryoneGroup);
-                             for (ServerWebSocket serverWebSocket : serverWebSockets)
-                             {
-                                 //send to everyone group
-                                 serverWebSocket.writeTextMessage((String) message.body());
-                             }
-                         });
+                    configureGroupListener(vertx, EveryoneGroup,ctx);
                 }
-                groupSockets.get(EveryoneGroup)
-                            .add(ctx);
 
                 //create my group id on connect
                 groupConsumers.put(id, new ArrayList<>());
                 groupCallScopeProperties.put(id, properties);
-                MessageConsumer<String> personalSocketSender = vertx.eventBus()
-                                                                    .consumer(id, message -> {
-                                                                        //send only to me
-                                                                        ctx.writeTextMessage((String) message.body());
-                                                                    });
-                groupConsumers.get(id)
-                              .add(personalSocketSender);
+
+                configureGroupListener(vertx,id,ctx);
 
                 //what happens on a message received
                 ctx.textMessageHandler((msg) -> {
                        processMessageInContext(ctx, msg, properties);
                    })
                    .exceptionHandler((e) -> {
-                       groupConsumers.get(EveryoneGroup)
-                                     .remove(personalSocketSender);
-                       groupSockets.get(EveryoneGroup)
-                                   .remove(ctx);
-                       groupConsumers.remove(id);
-                       groupCallScopeProperties.remove(id);
+                       log.log(Level.SEVERE,"Exception on web handler",e);
                        groupSockets.forEach((key,value)->{
                            value.removeIf(a->a.textHandlerID().equals(id));
                        });
+                       groupConsumers.forEach((key,value)->{
+                           value.removeIf(a->a.address().equals(id));
+                       });
                    })
                    .closeHandler((__) -> {
-                       groupConsumers.get(EveryoneGroup)
-                                     .remove(personalSocketSender);
-                       groupSockets.get(EveryoneGroup)
-                                   .remove(ctx);
-                       groupConsumers.remove(id);
-                       groupCallScopeProperties.remove(id);
+                       groupSockets.forEach((key,value)->{
+                           value.removeIf(a->a.textHandlerID().equals(id));
+                       });
+                       groupConsumers.forEach((key,value)->{
+                           value.removeIf(a->a.address().equals(id));
+                       });
                    });
 
                 log.fine("Client connected: " + ctx.remoteAddress() + " / " + id);
@@ -160,6 +135,26 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
             }
         });
         return builder;
+    }
+
+    public static void configureGroupListener(Vertx vertx, String group,ServerWebSocket webSocket) {
+        if (!groupConsumers.containsKey(group) || groupConsumers.get(group).isEmpty())
+        {
+            groupConsumers.put(group, new ArrayList<>());
+            groupSockets.put(group, new ArrayList<>());
+            MessageConsumer<String> r =  vertx.eventBus()
+                    .consumer(group, message -> {
+                        List<ServerWebSocket> serverWebSockets = groupSockets.get(group);
+                        for (ServerWebSocket serverWebSocket : serverWebSockets) {
+                            serverWebSocket.writeTextMessage((String) message.body());
+                        }
+                    });
+
+            groupSockets.get(group).add(webSocket);
+            groupConsumers.get(group)
+                    .add(r);
+        }
+
     }
 
     private void processMessageInContext(ServerWebSocket ctx, String msg, CallScopeProperties properties)
@@ -196,6 +191,9 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
     {
         builder = builder.setRegisterWebSocketWriteHandlers(true);
         builder = builder.setWebSocketAllowServerNoContext(true);
+        builder = builder.setPerMessageWebSocketCompressionSupported(true);
         return builder;
     }
+
+
 }

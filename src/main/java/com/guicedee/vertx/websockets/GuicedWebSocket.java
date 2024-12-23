@@ -12,6 +12,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.ServerWebSocket;
 import lombok.extern.java.Log;
 
+import java.util.ArrayList;
 import java.util.logging.Level;
 
 @CallScope
@@ -46,8 +47,14 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
      */
     public void broadcastMessage(String groupName, String message)
     {
-        vertx.eventBus()
-             .send(groupName, message);
+        if (!VertxHttpWebSocketConfigurator.groupSockets.containsKey(groupName)) {
+            log.warning("WS Group " + groupName + " not found, creating empty placeholder");
+            VertxHttpWebSocketConfigurator.groupSockets.put(groupName, new ArrayList<>());
+        }else {
+            VertxHttpWebSocketConfigurator.groupSockets.get(groupName).forEach(socket -> {
+                socket.writeTextMessage(message);
+            });
+        }
     }
 
     /**
