@@ -67,6 +67,10 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
         if (groupSockets.containsKey(group))
         {
             groupSockets.get(group).remove(webSocket);
+            if (groupSockets.get(group).isEmpty() && !EveryoneGroup.equalsIgnoreCase(group))
+            {
+                groupSockets.remove(group);
+            }
         }
     }
 
