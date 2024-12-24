@@ -90,13 +90,7 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
                 properties.getProperties()
                           .put("RequestContextId", id);
 
-                if (!groupConsumers.containsKey(EveryoneGroup))
-                {
-                    groupConsumers.put(EveryoneGroup, new ArrayList<>());
-                    groupSockets.put(EveryoneGroup, new ArrayList<>());
-
-                    configureGroupListener(vertx, EveryoneGroup,ctx);
-                }
+                configureGroupListener(vertx, EveryoneGroup,ctx);
 
                 //create my group id on connect
                 groupConsumers.put(id, new ArrayList<>());
@@ -149,11 +143,10 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
                             serverWebSocket.writeTextMessage((String) message.body());
                         }
                     });
-
-            groupSockets.get(group).add(webSocket);
             groupConsumers.get(group)
                     .add(r);
         }
+        groupSockets.get(group).add(webSocket);
 
     }
 
