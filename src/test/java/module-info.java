@@ -1,5 +1,5 @@
 module guiced.vertx.tests.sockets {
-    requires guiced.vertx.sockets;
+    requires com.guicedee.vertx.sockets;
     requires com.google.guice;
     requires org.junit.jupiter.api;
     requires com.guicedee.client;

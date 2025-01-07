@@ -3,14 +3,14 @@ import com.guicedee.guicedinjection.interfaces.*;
 import com.guicedee.vertx.spi.*;
 import com.guicedee.vertx.websockets.*;
 
-module guiced.vertx.sockets {
+module com.guicedee.vertx.sockets {
 
     exports com.guicedee.vertx.websockets;
 
     uses com.guicedee.guicedservlets.websockets.services.IWebSocketMessageReceiver;
     uses com.guicedee.guicedservlets.servlets.services.IOnCallScopeEnter;
     uses com.guicedee.guicedservlets.servlets.services.IOnCallScopeExit;
-    requires transitive guiced.vertx;
+    requires transitive com.guicedee.vertx;
     requires transitive com.guicedee.client;
     requires transitive io.vertx.core;
 
@@ -23,7 +23,6 @@ module guiced.vertx.sockets {
 
     opens com.guicedee.vertx.websockets.implementations to com.google.guice;
     opens com.guicedee.vertx.websockets to com.google.guice;
-
 
 
 }
