@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 import static com.guicedee.guicedservlets.websockets.options.CallScopeSource.WebSocket;
@@ -48,7 +49,7 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
     }
 
     public static final Map<String, List<MessageConsumer<String>>> groupConsumers = new HashMap<>();
-    public static final Map<String, List<ServerWebSocket>> groupSockets = new HashMap<>();
+    public static final Map<String, List<ServerWebSocket>> groupSockets = new ConcurrentHashMap<>();
     public static final Map<String, CallScopeProperties> groupCallScopeProperties = new HashMap<>();
 
     @Override
@@ -114,6 +115,7 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
                        groupConsumers.forEach((key,value)->{
                            value.removeIf(a->a.address().equals(id));
                        });
+                       groupCallScopeProperties.remove(id);
                    })
                    .closeHandler((__) -> {
                        groupSockets.forEach((key,value)->{
@@ -122,6 +124,7 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
                        groupConsumers.forEach((key,value)->{
                            value.removeIf(a->a.address().equals(id));
                        });
+                       groupCallScopeProperties.remove(id);
                    });
 
                 log.fine("Client connected: " + ctx.remoteAddress() + " / " + id);
@@ -150,8 +153,11 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
             groupConsumers.get(group)
                     .add(r);
         }
+        if(!groupSockets.containsKey(group))
+        {
+            groupSockets.put(group, new ArrayList<>());
+        }
         groupSockets.get(group).add(webSocket);
-
     }
 
     private void processMessageInContext(ServerWebSocket ctx, String msg, CallScopeProperties properties)
