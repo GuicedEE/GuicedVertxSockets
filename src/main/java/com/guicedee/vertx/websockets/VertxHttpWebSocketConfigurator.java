@@ -89,11 +89,14 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
                 }
                 callScoper.enter();
                 callScoper.scope(Key.get(ServerWebSocket.class), () -> ctx);
+
                 CallScopeProperties properties = IGuiceContext.get(CallScopeProperties.class);
                 String id = ctx.textHandlerID();
                 properties.setSource(WebSocket);
                 properties.getProperties()
                           .put("RequestContextId", id);
+
+             //   ctx.setWriteQueueMaxSize(5);
 
                 configureGroupListener(vertx, EveryoneGroup,ctx);
 
@@ -147,7 +150,8 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
                     .consumer(group, message -> {
                         List<ServerWebSocket> serverWebSockets = groupSockets.get(group);
                         for (ServerWebSocket serverWebSocket : serverWebSockets) {
-                            serverWebSocket.writeTextMessage((String) message.body());
+                            GuicedWebSocket.writeMessageToSocket(message.body(),serverWebSocket);
+                            //serverWebSocket.writeTextMessage((String) message.body());
                         }
                     });
             groupConsumers.get(group)
@@ -193,8 +197,8 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
     public HttpServerOptions builder(HttpServerOptions builder)
     {
         builder = builder.setRegisterWebSocketWriteHandlers(true);
-        builder = builder.setWebSocketAllowServerNoContext(true);
-        builder = builder.setPerMessageWebSocketCompressionSupported(true);
+        //builder = builder.setWebSocketAllowServerNoContext(true);
+       // builder = builder.setPerMessageWebSocketCompressionSupported(true);
         return builder;
     }
 

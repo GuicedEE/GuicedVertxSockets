@@ -13,6 +13,7 @@ import io.vertx.core.http.ServerWebSocket;
 import lombok.extern.java.Log;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 @CallScope
@@ -50,10 +51,24 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
         if (!VertxHttpWebSocketConfigurator.groupSockets.containsKey(groupName)) {
             log.warning("WS Group " + groupName + " not found, creating empty placeholder");
             VertxHttpWebSocketConfigurator.groupSockets.put(groupName, new ArrayList<>());
-        }else {
-            VertxHttpWebSocketConfigurator.groupSockets.get(groupName).forEach(socket -> {
-                socket.writeTextMessage(message);
-            });
+        }
+        VertxHttpWebSocketConfigurator.groupSockets.get(groupName).forEach(socket -> {
+            writeMessageToSocket(message, socket);
+        });
+    }
+
+    public static void writeMessageToSocket(String message, ServerWebSocket socket)
+    {
+        synchronized (socket.textHandlerID())
+        {
+            socket.writeTextMessage(message);
+            try
+            {
+                TimeUnit.MILLISECONDS.sleep(50);
+            } catch (InterruptedException e)
+            {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -78,8 +93,8 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
      */
     public void broadcastMessageSync(String groupName, String message)
     {
-        ((ServerWebSocket) callScopeProperties.getProperties()
-                                              .get("ServerWebSocket")).writeTextMessage(message);
+        writeMessageToSocket(message, ((ServerWebSocket) callScopeProperties.getProperties()
+                .get("ServerWebSocket")));
     }
 
     public void receiveMessage(String message)
