@@ -59,7 +59,7 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
 
     public static void writeMessageToSocket(String message, ServerWebSocket socket)
     {
-        synchronized (socket.textHandlerID())
+      // synchronized (socket.textHandlerID())
         {
             socket.writeTextMessage(message);
             try
