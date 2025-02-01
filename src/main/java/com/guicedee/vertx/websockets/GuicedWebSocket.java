@@ -57,7 +57,7 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
         });
     }
 
-    public static void writeMessageToSocket(String message, ServerWebSocket socket)
+    public static synchronized void writeMessageToSocket(String message, ServerWebSocket socket)
     {
       // synchronized (socket.textHandlerID())
         {
