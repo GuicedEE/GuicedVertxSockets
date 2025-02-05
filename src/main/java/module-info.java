@@ -24,5 +24,7 @@ module com.guicedee.vertx.sockets {
     opens com.guicedee.vertx.websockets.implementations to com.google.guice;
     opens com.guicedee.vertx.websockets to com.google.guice;
 
-
+    uses GuicedWebSocketOnAddToGroup;
+    uses GuicedWebSocketOnRemoveFromGroup;
+    uses GuicedWebSocketOnPublish;
 }

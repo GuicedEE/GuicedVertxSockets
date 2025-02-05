@@ -1,6 +1,7 @@
 package com.guicedee.vertx.websockets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.guicedservlets.servlets.services.scopes.CallScope;
@@ -13,6 +14,10 @@ import io.vertx.core.http.ServerWebSocket;
 import lombok.extern.java.Log;
 
 import java.util.ArrayList;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -27,17 +32,41 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
     Vertx vertx;
 
     @Override
-    public void addToGroup(String groupName)
+    public void addToGroup(String groupName)  throws Exception
     {
-        ServerWebSocket serverWebSocket1 = IGuiceContext.get(ServerWebSocket.class);
-        VertxHttpWebSocketConfigurator.addToGroup(groupName, serverWebSocket1);
+        Set<GuicedWebSocketOnAddToGroup> onAdd = IGuiceContext.loaderToSet(ServiceLoader.load(GuicedWebSocketOnAddToGroup.class));
+        CompletableFuture<Boolean> performed = new CompletableFuture<>();
+        if(onAdd.isEmpty()) {
+            performed.complete(false);
+        }else
+        for (var guicedWebSocketOnAddToGroup : onAdd) {
+            performed = guicedWebSocketOnAddToGroup.onAddToGroup(groupName);
+                if(performed.get())
+                    break;
+        }
+        if(!performed.get()) {
+            ServerWebSocket serverWebSocket1 = IGuiceContext.get(ServerWebSocket.class);
+            VertxHttpWebSocketConfigurator.addToGroup(groupName, serverWebSocket1);
+        }
     }
 
     @Override
-    public void removeFromGroup(String groupName)
+    public void removeFromGroup(String groupName)  throws Exception
     {
-        ServerWebSocket serverWebSocket1 = IGuiceContext.get(ServerWebSocket.class);
-        VertxHttpWebSocketConfigurator.removeFromGroup(groupName, serverWebSocket1);
+        Set<GuicedWebSocketOnRemoveFromGroup> onRemove = IGuiceContext.loaderToSet(ServiceLoader.load(GuicedWebSocketOnRemoveFromGroup.class));
+        CompletableFuture<Boolean> performed = new CompletableFuture<>();
+        if(onRemove.isEmpty()) {
+            performed.complete(false);
+        }
+        else for (var guicedWebSocketOnRemoveFromGroup : onRemove) {
+            performed = guicedWebSocketOnRemoveFromGroup.onRemoveFromGroup(groupName);
+            if(performed.get())
+                break;
+        }
+        if(!performed.get()) {
+            ServerWebSocket serverWebSocket1 = IGuiceContext.get(ServerWebSocket.class);
+            VertxHttpWebSocketConfigurator.removeFromGroup(groupName, serverWebSocket1);
+        }
     }
 
     /**
@@ -48,16 +77,58 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
      */
     public void broadcastMessage(String groupName, String message)
     {
-        if (!VertxHttpWebSocketConfigurator.groupSockets.containsKey(groupName)) {
-            log.warning("WS Group " + groupName + " not found, creating empty placeholder");
-            VertxHttpWebSocketConfigurator.groupSockets.put(groupName, new ArrayList<>());
+        String contextId = null;
+        if(callScopeProperties.getProperties()
+                .get("RequestContextId")!= null)
+        {
+            contextId = callScopeProperties.getProperties()
+                    .get("RequestContextId")
+                    .toString();
         }
-        VertxHttpWebSocketConfigurator.groupSockets.get(groupName).forEach(socket -> {
-            writeMessageToSocket(message, socket);
-        });
+
+        Set<GuicedWebSocketOnPublish> onRemove = IGuiceContext.loaderToSet(ServiceLoader.load(GuicedWebSocketOnPublish.class));
+        CompletableFuture<Boolean> performed = new CompletableFuture<>();
+        if(Strings.isNullOrEmpty(contextId)) {
+            if(onRemove.isEmpty()) {
+                performed.complete(false);
+            }
+            else for (var guicedWebSocketOnRemoveFromGroup : onRemove) {
+                try {
+                    performed.complete(guicedWebSocketOnRemoveFromGroup.publish(groupName,message));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                try {
+                    if (performed.get())
+                        break;
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                } catch (ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }else {
+            performed.complete(false);
+        }
+        try {
+            if(!performed.get()) {
+
+                if (!VertxHttpWebSocketConfigurator.groupSockets.containsKey(groupName)) {
+                    log.warning("WS Group " + groupName + " not found, creating empty placeholder");
+                    VertxHttpWebSocketConfigurator.groupSockets.put(groupName, new ArrayList<>());
+                }
+                VertxHttpWebSocketConfigurator.groupSockets.get(groupName).forEach(socket -> {
+                    writeMessageToSocket(message, socket);
+                });
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public static synchronized void writeMessageToSocket(String message, ServerWebSocket socket)
+    public static void writeMessageToSocket(String message, ServerWebSocket socket)
     {
       // synchronized (socket.textHandlerID())
         {
