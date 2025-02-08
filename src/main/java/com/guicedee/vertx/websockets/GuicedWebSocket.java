@@ -128,19 +128,9 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
         }
     }
 
-    public static void writeMessageToSocket(String message, ServerWebSocket socket)
+    public static synchronized void writeMessageToSocket(String message, ServerWebSocket socket)
     {
-      // synchronized (socket.textHandlerID())
-        {
-            socket.writeTextMessage(message);
-            try
-            {
-                TimeUnit.MILLISECONDS.sleep(50);
-            } catch (InterruptedException e)
-            {
-                throw new RuntimeException(e);
-            }
-        }
+        socket.writeTextMessage(message);
     }
 
     /**
