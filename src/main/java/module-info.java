@@ -2,6 +2,7 @@ import com.guicedee.vertx.websockets.implementations.VertxWebSocketsModule;
 import com.guicedee.guicedinjection.interfaces.*;
 import com.guicedee.vertx.spi.*;
 import com.guicedee.vertx.websockets.*;
+import com.guicedee.guicedservlets.websockets.services.*;
 
 module com.guicedee.vertx.sockets {
 

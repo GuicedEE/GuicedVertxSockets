@@ -8,6 +8,9 @@ import com.guicedee.guicedservlets.servlets.services.scopes.CallScope;
 import com.guicedee.guicedservlets.websockets.options.CallScopeProperties;
 import com.guicedee.guicedservlets.websockets.options.IGuicedWebSocket;
 import com.guicedee.guicedservlets.websockets.options.WebSocketMessageReceiver;
+import com.guicedee.guicedservlets.websockets.services.GuicedWebSocketOnAddToGroup;
+import com.guicedee.guicedservlets.websockets.services.GuicedWebSocketOnPublish;
+import com.guicedee.guicedservlets.websockets.services.GuicedWebSocketOnRemoveFromGroup;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.ServerWebSocket;
@@ -18,7 +21,6 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 @CallScope
@@ -183,6 +185,32 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
         catch (Exception e)
         {
             log.log(Level.SEVERE, "ERROR Message Received - Message=" + message, e);
+        }
+    }
+
+    public void receiveMessage(WebSocketMessageReceiver<?> messageReceived)
+    {
+        try
+        {
+            String requestContextId = callScopeProperties.getProperties()
+                    .get("RequestContextId")
+                    .toString();
+            messageReceived.setBroadcastGroup(requestContextId);
+            if (IGuicedWebSocket.getMessagesListeners()
+                    .containsKey(messageReceived.getAction()))
+            {
+                IGuicedWebSocket.getMessagesListeners()
+                        .get(messageReceived.getAction())
+                        .receiveMessage(messageReceived);
+            }
+            else
+            {
+                log.warning("No web socket action registered for " + messageReceived.getAction());
+            }
+        }
+        catch (Exception e)
+        {
+            log.log(Level.SEVERE, "ERROR Message Received - Message=" + messageReceived.toString(), e);
         }
     }
 
