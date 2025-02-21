@@ -12,6 +12,7 @@ import com.guicedee.vertx.spi.VertxHttpServerConfigurator;
 import com.guicedee.vertx.spi.VertxHttpServerOptionsConfigurator;
 import com.guicedee.vertx.spi.VertxRouterConfigurator;
 import io.vertx.core.Vertx;
+import io.vertx.core.WorkerExecutor;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
@@ -44,6 +45,8 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
     @Inject
     CallScoper callScoper;
 
+    private WorkerExecutor executor;
+
     public Integer sortOrder()
     {
         return 55;
@@ -57,6 +60,12 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
     public List<CompletableFuture<Boolean>> postLoad()
     {
         return List.of();
+    }
+
+    @Inject
+    void setup()
+    {
+        executor = vertx.createSharedWorkerExecutor("websocket-worker-thread");
     }
 
     public static void addToGroup(String group, ServerWebSocket webSocket)
@@ -172,10 +181,10 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
 
     private void processMessageInContext(ServerWebSocket ctx, String msg, CallScopeProperties properties)
     {
-        CompletableFuture.runAsync(() -> {
+        executor.executeBlocking(() -> {
+            CallScoper callScoper = IGuiceContext.get(CallScoper.class);
             try
             {
-                CallScoper callScoper = IGuiceContext.get(CallScoper.class);
                 callScoper.enter();
                 callScoper.scope(Key.get(ServerWebSocket.class), () -> ctx);
 
@@ -191,6 +200,7 @@ public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHt
             {
                 callScoper.exit();
             }
+            return true;
         });
 
     }
