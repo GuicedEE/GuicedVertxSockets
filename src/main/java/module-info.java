@@ -1,8 +1,9 @@
 import com.guicedee.vertx.websockets.implementations.VertxWebSocketsModule;
-import com.guicedee.guicedinjection.interfaces.*;
 import com.guicedee.vertx.spi.*;
-import com.guicedee.vertx.websockets.*;
+import com.guicedee.vertx.web.spi.*;
+import com.guicedee.guicedinjection.interfaces.*;
 import com.guicedee.guicedservlets.websockets.services.*;
+import com.guicedee.vertx.websockets.*;
 
 module com.guicedee.vertx.sockets {
 
@@ -11,14 +12,13 @@ module com.guicedee.vertx.sockets {
     uses com.guicedee.guicedservlets.websockets.services.IWebSocketMessageReceiver;
     uses com.guicedee.guicedservlets.servlets.services.IOnCallScopeEnter;
     uses com.guicedee.guicedservlets.servlets.services.IOnCallScopeExit;
-    requires transitive com.guicedee.vertx;
-    requires transitive com.guicedee.client;
-    requires transitive io.vertx.core;
+    requires transitive com.guicedee.vertx.web;
+
 
     requires static lombok;
 
     provides IGuicePostStartup with VertxHttpWebSocketConfigurator;
-    provides com.guicedee.vertx.spi.VertxHttpServerConfigurator with VertxHttpWebSocketConfigurator;
+    provides VertxHttpServerConfigurator with VertxHttpWebSocketConfigurator;
     provides IGuiceModule with VertxWebSocketsModule;
     provides VertxHttpServerOptionsConfigurator with VertxHttpWebSocketConfigurator;
 

@@ -41,7 +41,7 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
         if(onAdd.isEmpty()) {
             performed.complete(false);
         }else
-        for (var guicedWebSocketOnAddToGroup : onAdd) {
+            for (var guicedWebSocketOnAddToGroup : onAdd) {
             performed = guicedWebSocketOnAddToGroup.onAddToGroup(groupName);
                 if(performed.get())
                     break;
