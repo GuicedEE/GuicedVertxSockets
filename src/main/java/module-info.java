@@ -17,10 +17,10 @@ module com.guicedee.vertx.sockets {
 
     requires static lombok;
 
-    provides IGuicePostStartup with VertxHttpWebSocketConfigurator;
-    provides VertxHttpServerConfigurator with VertxHttpWebSocketConfigurator;
+    provides IGuicePostStartup with VertxSocketHttpWebSocketConfigurator;
+    provides VertxHttpServerConfigurator with VertxSocketHttpWebSocketConfigurator;
     provides IGuiceModule with VertxWebSocketsModule;
-    provides VertxHttpServerOptionsConfigurator with VertxHttpWebSocketConfigurator;
+    provides VertxHttpServerOptionsConfigurator with VertxSocketHttpWebSocketConfigurator;
 
     opens com.guicedee.vertx.websockets.implementations to com.google.guice;
     opens com.guicedee.vertx.websockets to com.google.guice;

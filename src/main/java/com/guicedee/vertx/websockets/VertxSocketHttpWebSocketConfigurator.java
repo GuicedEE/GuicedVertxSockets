@@ -33,7 +33,7 @@ import static com.guicedee.guicedservlets.websockets.options.IGuicedWebSocket.Ev
 
 @Log
 @Singleton
-public class VertxHttpWebSocketConfigurator implements IGuicePostStartup<VertxHttpWebSocketConfigurator>,
+public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<VertxSocketHttpWebSocketConfigurator>,
         VertxHttpServerConfigurator, VertxRouterConfigurator,
         VertxHttpServerOptionsConfigurator
 

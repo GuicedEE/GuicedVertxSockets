@@ -48,7 +48,7 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
         }
         if(!performed.get()) {
             ServerWebSocket serverWebSocket1 = IGuiceContext.get(ServerWebSocket.class);
-            VertxHttpWebSocketConfigurator.addToGroup(groupName, serverWebSocket1);
+            VertxSocketHttpWebSocketConfigurator.addToGroup(groupName, serverWebSocket1);
         }
     }
 
@@ -67,7 +67,7 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
         }
         if(!performed.get()) {
             ServerWebSocket serverWebSocket1 = IGuiceContext.get(ServerWebSocket.class);
-            VertxHttpWebSocketConfigurator.removeFromGroup(groupName, serverWebSocket1);
+            VertxSocketHttpWebSocketConfigurator.removeFromGroup(groupName, serverWebSocket1);
         }
     }
 
@@ -115,11 +115,11 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
         try {
             if(!performed.get()) {
 
-                if (!VertxHttpWebSocketConfigurator.groupSockets.containsKey(groupName)) {
+                if (!VertxSocketHttpWebSocketConfigurator.groupSockets.containsKey(groupName)) {
                     log.warning("WS Group " + groupName + " not found, creating empty placeholder");
-                    VertxHttpWebSocketConfigurator.groupSockets.put(groupName, new ArrayList<>());
+                    VertxSocketHttpWebSocketConfigurator.groupSockets.put(groupName, new ArrayList<>());
                 }
-                VertxHttpWebSocketConfigurator.groupSockets.get(groupName).forEach(socket -> {
+                VertxSocketHttpWebSocketConfigurator.groupSockets.get(groupName).forEach(socket -> {
                     writeMessageToSocket(message, socket);
                 });
             }
