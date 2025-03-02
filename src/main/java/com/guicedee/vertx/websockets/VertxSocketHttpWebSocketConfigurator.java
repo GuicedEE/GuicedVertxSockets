@@ -11,6 +11,7 @@ import com.guicedee.guicedservlets.websockets.options.IGuicedWebSocket;
 import com.guicedee.vertx.web.spi.VertxHttpServerConfigurator;
 import com.guicedee.vertx.web.spi.VertxHttpServerOptionsConfigurator;
 import com.guicedee.vertx.web.spi.VertxRouterConfigurator;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -56,7 +57,7 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
     public static final Map<String, CallScopeProperties> groupCallScopeProperties = new ConcurrentHashMap<>();
 
     @Override
-    public List<CompletableFuture<Boolean>> postLoad()
+    public List<Future<Boolean>> postLoad()
     {
         return List.of();
     }
