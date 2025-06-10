@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import com.guicedee.client.CallScoper;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.guicedinjection.interfaces.IGuicePostStartup;
-import com.guicedee.guicedservlets.websockets.options.CallScopeProperties;
+import com.guicedee.client.CallScopeProperties;
 import com.guicedee.guicedservlets.websockets.options.IGuicedWebSocket;
 import com.guicedee.vertx.web.spi.VertxHttpServerConfigurator;
 import com.guicedee.vertx.web.spi.VertxHttpServerOptionsConfigurator;
@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 
-import static com.guicedee.guicedservlets.websockets.options.CallScopeSource.WebSocket;
+import static com.guicedee.client.CallScopeSource.WebSocket;
 import static com.guicedee.guicedservlets.websockets.options.IGuicedWebSocket.EveryoneGroup;
 
 @Log
