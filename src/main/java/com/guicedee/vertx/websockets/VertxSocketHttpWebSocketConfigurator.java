@@ -19,7 +19,7 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.ext.web.Router;
-import lombok.extern.java.Log;
+import lombok.extern.log4j.Log4j2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,12 +27,11 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.logging.Level;
 
 import static com.guicedee.client.CallScopeSource.WebSocket;
 import static com.guicedee.guicedservlets.websockets.options.IGuicedWebSocket.EveryoneGroup;
 
-@Log
+@Log4j2
 @Singleton
 public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<VertxSocketHttpWebSocketConfigurator>,
         VertxHttpServerConfigurator, VertxRouterConfigurator,
@@ -125,7 +124,7 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
                             processMessageInContext(ctx, msg, properties);
                         })
                         .exceptionHandler((e) -> {
-                            log.log(Level.SEVERE, "Exception on web handler", e);
+                            log.error("Exception on web handler", e);
                             groupSockets.forEach((key, value) -> {
                                 value.removeIf(a -> a.textHandlerID().equals(id));
                             });
@@ -144,7 +143,7 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
                             groupCallScopeProperties.remove(id);
                         });
 
-                log.fine("Client connected: " + ctx.remoteAddress() + " / " + id);
+                log.debug("Client connected: " + ctx.remoteAddress() + " / " + id);
                 //add to default groups, everyone and me
             } finally
             {

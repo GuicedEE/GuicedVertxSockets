@@ -14,17 +14,16 @@ import com.guicedee.guicedservlets.websockets.services.GuicedWebSocketOnRemoveFr
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.ServerWebSocket;
-import lombok.extern.java.Log;
+import lombok.extern.log4j.Log4j2;
 
 import java.util.ArrayList;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 
 @CallScope
-@Log
+@Log4j2
 public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocket
 {
     @Inject
@@ -116,7 +115,7 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
             if(!performed.get()) {
 
                 if (!VertxSocketHttpWebSocketConfigurator.groupSockets.containsKey(groupName)) {
-                    log.warning("WS Group " + groupName + " not found, creating empty placeholder");
+                    log.warn("WS Group " + groupName + " not found, creating empty placeholder");
                     VertxSocketHttpWebSocketConfigurator.groupSockets.put(groupName, new ArrayList<>());
                 }
                 VertxSocketHttpWebSocketConfigurator.groupSockets.get(groupName).forEach(socket -> {
@@ -179,12 +178,12 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
             }
             else
             {
-                log.warning("No web socket action registered for " + messageReceived.getAction());
+                log.warn("No web socket action registered for " + messageReceived.getAction());
             }
         }
         catch (Exception e)
         {
-            log.log(Level.SEVERE, "ERROR Message Received - Message=" + message, e);
+            log.error("ERROR Message Received - Message=" + message, e);
         }
     }
 
@@ -205,12 +204,12 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
             }
             else
             {
-                log.warning("No web socket action registered for " + messageReceived.getAction());
+                log.warn("No web socket action registered for " + messageReceived.getAction());
             }
         }
         catch (Exception e)
         {
-            log.log(Level.SEVERE, "ERROR Message Received - Message=" + messageReceived.toString(), e);
+            log.error("ERROR Message Received - Message=" + messageReceived.toString(), e);
         }
     }
 
