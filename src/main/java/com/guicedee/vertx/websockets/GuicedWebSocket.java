@@ -159,58 +159,63 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
                 .get("ServerWebSocket")));
     }
 
-    public void receiveMessage(String message)
+    public io.smallrye.mutiny.Uni<Void> receiveMessage(String message)
     {
-        try
-        {
-            WebSocketMessageReceiver<?> messageReceived = IGuiceContext.get(ObjectMapper.class)
-                                                                       .readValue(message, WebSocketMessageReceiver.class);
-            String requestContextId = callScopeProperties.getProperties()
-                                                         .get("RequestContextId")
-                                                         .toString();
-            messageReceived.setBroadcastGroup(requestContextId);
-            if (IGuicedWebSocket.getMessagesListeners()
-                                .containsKey(messageReceived.getAction()))
-            {
-                IGuicedWebSocket.getMessagesListeners()
+        return io.smallrye.mutiny.Uni.createFrom().item(() -> {
+                    try {
+                        return IGuiceContext.get(ObjectMapper.class)
+                                .readValue(message, WebSocketMessageReceiver.class);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .onItem().transformToUni(messageReceived -> {
+                    String requestContextId = callScopeProperties.getProperties()
+                            .get("RequestContextId")
+                            .toString();
+                    messageReceived.setBroadcastGroup(requestContextId);
+                    if (IGuicedWebSocket.getMessagesListeners()
+                            .containsKey(messageReceived.getAction()))
+                    {
+                        return IGuicedWebSocket.getMessagesListeners()
                                 .get(messageReceived.getAction())
                                 .receiveMessage(messageReceived);
-            }
-            else
-            {
-                log.warn("No web socket action registered for " + messageReceived.getAction());
-            }
-        }
-        catch (Exception e)
-        {
-            log.error("ERROR Message Received - Message=" + message, e);
-        }
+                    }
+                    else
+                    {
+                        log.warn("No web socket action registered for " + messageReceived.getAction());
+                        return io.smallrye.mutiny.Uni.createFrom().voidItem();
+                    }
+                })
+                .onFailure().invoke(e -> log.error("ERROR Message Received - Message=" + message, e))
+                .replaceWithVoid();
     }
 
-    public void receiveMessage(WebSocketMessageReceiver<?> messageReceived)
+    public io.smallrye.mutiny.Uni<Void> receiveMessage(WebSocketMessageReceiver<?> messageReceived)
     {
-        try
-        {
-            String requestContextId = callScopeProperties.getProperties()
-                    .get("RequestContextId")
-                    .toString();
-            messageReceived.setBroadcastGroup(requestContextId);
-            if (IGuicedWebSocket.getMessagesListeners()
-                    .containsKey(messageReceived.getAction()))
-            {
-                IGuicedWebSocket.getMessagesListeners()
-                        .get(messageReceived.getAction())
-                        .receiveMessage(messageReceived);
-            }
-            else
-            {
-                log.warn("No web socket action registered for " + messageReceived.getAction());
-            }
-        }
-        catch (Exception e)
-        {
-            log.error("ERROR Message Received - Message=" + messageReceived.toString(), e);
-        }
+        return io.smallrye.mutiny.Uni.createFrom().item(() -> {
+                    String requestContextId = callScopeProperties.getProperties()
+                            .get("RequestContextId")
+                            .toString();
+                    messageReceived.setBroadcastGroup(requestContextId);
+                    return messageReceived;
+                })
+                .onItem().transformToUni(msg -> {
+                    if (IGuicedWebSocket.getMessagesListeners()
+                            .containsKey(msg.getAction()))
+                    {
+                        return IGuicedWebSocket.getMessagesListeners()
+                                .get(msg.getAction())
+                                .receiveMessage(msg);
+                    }
+                    else
+                    {
+                        log.warn("No web socket action registered for " + msg.getAction());
+                        return io.smallrye.mutiny.Uni.createFrom().voidItem();
+                    }
+                })
+                .onFailure().invoke(e -> log.error("ERROR Message Received - Message=" + messageReceived.toString(), e))
+                .replaceWithVoid();
     }
 
 

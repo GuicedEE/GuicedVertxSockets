@@ -121,7 +121,11 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
 
                 //what happens on a message received
                 ctx.textMessageHandler((msg) -> {
-                            processMessageInContext(ctx, msg, properties);
+                            processMessageInContext(ctx, msg, properties)
+                                    .subscribe().with(
+                                            v -> { },
+                                            e -> log.error("WebSocket message processing failed", e)
+                                    );
                         })
                         .exceptionHandler((e) -> {
                             log.error("Exception on web handler", e);
@@ -178,28 +182,22 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
         groupSockets.get(group).add(webSocket);
     }
 
-    private void processMessageInContext(ServerWebSocket ctx, String msg, CallScopeProperties properties)
+    private io.smallrye.mutiny.Uni<Void> processMessageInContext(ServerWebSocket ctx, String msg, CallScopeProperties properties)
     {
-        executor.executeBlocking(() -> {
+        return io.smallrye.mutiny.Uni.createFrom().deferred(() -> {
             CallScoper callScoper = IGuiceContext.get(CallScoper.class);
-            try
-            {
-                callScoper.enter();
-                callScoper.scope(Key.get(ServerWebSocket.class), () -> ctx);
+            callScoper.enter();
+            callScoper.scope(Key.get(ServerWebSocket.class), () -> ctx);
 
-                CallScopeProperties props = IGuiceContext.get(CallScopeProperties.class);
-                props.setSource(properties.getSource());
-                properties.getProperties()
-                        .put("ServerWebSocket", ctx);
-                props.getProperties()
-                        .putAll(properties.getProperties());
-                GuicedWebSocket guicedWebSocket = (GuicedWebSocket) IGuiceContext.get(IGuicedWebSocket.class);
-                guicedWebSocket.receiveMessage(msg);
-            } finally
-            {
-                callScoper.exit();
-            }
-            return true;
+            CallScopeProperties props = IGuiceContext.get(CallScopeProperties.class);
+            props.setSource(properties.getSource());
+            properties.getProperties()
+                    .put("ServerWebSocket", ctx);
+            props.getProperties()
+                    .putAll(properties.getProperties());
+            GuicedWebSocket guicedWebSocket = (GuicedWebSocket) IGuiceContext.get(IGuicedWebSocket.class);
+            return guicedWebSocket.receiveMessage(msg)
+                    .eventually(callScoper::exit);
         });
 
     }
@@ -215,7 +213,10 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
     {
         builder = builder.setRegisterWebSocketWriteHandlers(true);
         //builder = builder.setWebSocketAllowServerNoContext(true);
-        // builder = builder.setPerMessageWebSocketCompressionSupported(true);
+        builder = builder.setPerMessageWebSocketCompressionSupported(true);
+								builder = builder.setMaxChunkSize(65536);
+								builder = builder.setMaxFormAttributeSize(65536);
+								builder = builder.setCompressionLevel(9);
         return builder;
     }
 
