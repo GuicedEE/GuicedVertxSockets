@@ -43,6 +43,9 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
     @Inject
     CallScoper callScoper;
 
+    @Inject
+    WebSocketServerOptions webSocketServerOptions;
+
     private WorkerExecutor executor;
 
     public Integer sortOrder()
@@ -210,12 +213,19 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
     @Override
     public HttpServerOptions builder(HttpServerOptions builder)
     {
-        builder = builder.setRegisterWebSocketWriteHandlers(true);
-        //builder = builder.setWebSocketAllowServerNoContext(true);
-        builder = builder.setPerMessageWebSocketCompressionSupported(true);
-								builder = builder.setMaxChunkSize(65536);
-								builder = builder.setMaxFormAttributeSize(65536);
-								builder = builder.setCompressionLevel(9);
+        webSocketServerOptions.validate();
+        
+        builder = builder.setRegisterWebSocketWriteHandlers(
+            webSocketServerOptions.isRegisterWebSocketWriteHandlers());
+        builder = builder.setPerMessageWebSocketCompressionSupported(
+            webSocketServerOptions.isPerMessageCompressionSupported());
+        builder = builder.setCompressionLevel(
+            webSocketServerOptions.getCompressionLevel());
+        builder = builder.setMaxChunkSize(
+            webSocketServerOptions.getMaxChunkSize());
+        builder = builder.setMaxFormAttributeSize(
+            webSocketServerOptions.getMaxFormAttributeSize());
+        
         return builder;
     }
 

@@ -18,7 +18,7 @@ module com.guicedee.vertx.sockets {
     uses IOnCallScopeEnter;
     uses IOnCallScopeExit;
     requires transitive com.guicedee.vertx.web;
-
+    requires static org.jspecify;
 
     requires static lombok;
 
