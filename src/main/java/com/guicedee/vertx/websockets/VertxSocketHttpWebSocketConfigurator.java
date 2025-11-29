@@ -3,11 +3,11 @@ package com.guicedee.vertx.websockets;
 import com.google.inject.Inject;
 import com.google.inject.Key;
 import com.google.inject.Singleton;
-import com.guicedee.client.CallScoper;
+import com.guicedee.client.scopes.CallScoper;
 import com.guicedee.client.IGuiceContext;
-import com.guicedee.guicedinjection.interfaces.IGuicePostStartup;
-import com.guicedee.client.CallScopeProperties;
-import com.guicedee.guicedservlets.websockets.options.IGuicedWebSocket;
+import com.guicedee.client.services.lifecycle.IGuicePostStartup;
+import com.guicedee.client.scopes.CallScopeProperties;
+import com.guicedee.client.services.websocket.IGuicedWebSocket;
 import com.guicedee.vertx.web.spi.VertxHttpServerConfigurator;
 import com.guicedee.vertx.web.spi.VertxHttpServerOptionsConfigurator;
 import com.guicedee.vertx.web.spi.VertxRouterConfigurator;
@@ -24,12 +24,11 @@ import lombok.extern.log4j.Log4j2;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static com.guicedee.client.CallScopeSource.WebSocket;
-import static com.guicedee.guicedservlets.websockets.options.IGuicedWebSocket.EveryoneGroup;
+import static com.guicedee.client.scopes.CallScopeSource.WebSocket;
+import static com.guicedee.client.services.websocket.IGuicedWebSocket.EveryoneGroup;
 
 @Log4j2
 @Singleton

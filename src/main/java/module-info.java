@@ -1,17 +1,22 @@
+import com.guicedee.client.services.lifecycle.IGuiceModule;
+import com.guicedee.client.services.lifecycle.IGuicePostStartup;
+import com.guicedee.client.services.lifecycle.IOnCallScopeEnter;
+import com.guicedee.client.services.lifecycle.IOnCallScopeExit;
+import com.guicedee.client.services.websocket.GuicedWebSocketOnAddToGroup;
+import com.guicedee.client.services.websocket.GuicedWebSocketOnPublish;
+import com.guicedee.client.services.websocket.GuicedWebSocketOnRemoveFromGroup;
+import com.guicedee.client.services.websocket.IWebSocketMessageReceiver;
 import com.guicedee.vertx.websockets.implementations.VertxWebSocketsModule;
-import com.guicedee.vertx.spi.*;
 import com.guicedee.vertx.web.spi.*;
-import com.guicedee.guicedinjection.interfaces.*;
-import com.guicedee.guicedservlets.websockets.services.*;
 import com.guicedee.vertx.websockets.*;
 
 module com.guicedee.vertx.sockets {
 
     exports com.guicedee.vertx.websockets;
 
-    uses com.guicedee.guicedservlets.websockets.services.IWebSocketMessageReceiver;
-    uses com.guicedee.guicedservlets.servlets.services.IOnCallScopeEnter;
-    uses com.guicedee.guicedservlets.servlets.services.IOnCallScopeExit;
+    uses IWebSocketMessageReceiver;
+    uses IOnCallScopeEnter;
+    uses IOnCallScopeExit;
     requires transitive com.guicedee.vertx.web;
 
 

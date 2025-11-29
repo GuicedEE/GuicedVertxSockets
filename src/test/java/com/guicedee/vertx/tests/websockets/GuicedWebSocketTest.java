@@ -3,7 +3,7 @@ package com.guicedee.vertx.tests.websockets;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Injector;
 import com.guicedee.client.IGuiceContext;
-import com.guicedee.guicedservlets.websockets.options.WebSocketMessageReceiver;
+import com.guicedee.client.services.websocket.WebSocketMessageReceiver;
 import com.guicedee.services.jsonrepresentation.IJsonRepresentation;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
