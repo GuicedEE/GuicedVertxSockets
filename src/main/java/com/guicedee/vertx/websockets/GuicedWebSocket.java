@@ -16,14 +16,25 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.ServerWebSocket;
 import lombok.extern.log4j.Log4j2;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Call-scoped WebSocket facade that coordinates group membership, message
+ * broadcasting, and inbound message dispatch.
+ *
+ * <p>This verticle integrates with GuicedEE SPI hooks to allow custom behavior
+ * for group lifecycle and publish operations, while falling back to the default
+ * group registry when no handlers are present.</p>
+ *
+ * @see GuicedWebSocketOnAddToGroup
+ * @see GuicedWebSocketOnRemoveFromGroup
+ * @see GuicedWebSocketOnPublish
+ * @see VertxSocketHttpWebSocketConfigurator
+ */
 @CallScope
 @Log4j2
 public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocket
