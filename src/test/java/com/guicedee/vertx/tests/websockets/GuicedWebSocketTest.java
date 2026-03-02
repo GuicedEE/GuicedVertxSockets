@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Injector;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.client.services.websocket.WebSocketMessageReceiver;
-import com.guicedee.services.jsonrepresentation.IJsonRepresentation;
+import com.guicedee.modules.services.jsonrepresentation.IJsonRepresentation;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import org.junit.jupiter.api.Test;

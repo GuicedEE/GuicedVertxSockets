@@ -11,9 +11,8 @@ import com.guicedee.client.services.websocket.IGuicedWebSocket;
 import com.guicedee.vertx.web.spi.VertxHttpServerConfigurator;
 import com.guicedee.vertx.web.spi.VertxHttpServerOptionsConfigurator;
 import com.guicedee.vertx.web.spi.VertxRouterConfigurator;
-import io.vertx.core.Future;
+import io.smallrye.mutiny.Uni;
 import io.vertx.core.Vertx;
-import io.vertx.core.WorkerExecutor;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
@@ -81,7 +80,7 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
      * @return an empty list (no async work required)
      */
     @Override
-    public List<Future<Boolean>> postLoad() {
+    public List<Uni<Boolean>> postLoad() {
         return List.of();
     }
 
