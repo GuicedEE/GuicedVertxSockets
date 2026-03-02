@@ -7,5 +7,5 @@ module guiced.vertx.tests.sockets {
     requires java.net.http;
     requires com.guicedee.jsonrepresentation;
 
-    opens com.guicedee.vertx.tests.websockets to org.junit.platform.commons;
+   // opens com.guicedee.vertx.tests.websockets to org.junit.platform.commons;
 }
