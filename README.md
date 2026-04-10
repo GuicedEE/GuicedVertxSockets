@@ -28,7 +28,7 @@ Built on [Vert.x](https://vertx.io/) · [Google Guice](https://github.com/google
 <summary>Gradle (Kotlin DSL)</summary>
 
 ```kotlin
-implementation("com.guicedee:websockets:2.0.0-SNAPSHOT")
+implementation("com.guicedee:websockets:2.0.0-RC1")
 ```
 </details>
 
