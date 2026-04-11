@@ -20,6 +20,8 @@ on:
 permissions:
   contents: read
   packages: write
+  checks: write
+  pull-requests: write
 
 jobs:
   verify:
