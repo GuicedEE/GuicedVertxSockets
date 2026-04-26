@@ -6,14 +6,14 @@
     <parent>
         <groupId>com.guicedee</groupId>
         <artifactId>parent</artifactId>
-        <version>2.0.0-RC9</version>
+        <version>2.0.0-RC10</version>
     </parent>
 
     <groupId>com.guicedee</groupId>
     <artifactId>websockets</artifactId>
 
     <packaging>jar</packaging>
-    <version>2.0.0-RC9</version>
+    <version>2.0.0-RC10</version>
     <name>Guiced Vert.x Websockets</name>
     <description>An integration library for Reactive Websockets in Guice
     </description>
