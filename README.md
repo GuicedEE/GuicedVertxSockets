@@ -2,7 +2,7 @@
 
 [![Build](https://github.com/GuicedEE/GuicedVertxSockets/actions/workflows/build.yml/badge.svg)](https://github.com/GuicedEE/GuicedVertxSockets/actions/workflows/build.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/com.guicedee/websockets)](https://central.sonatype.com/artifact/com.guicedee/websockets)
-[![Maven Snapshot](https://img.shields.io/nexus/s/com.guicedee/websockets?server=https%3A%2F%2Foss.sonatype.org&label=Maven%20Snapshot)](https://oss.sonatype.org/content/repositories/snapshots/com/guicedee/websockets/)
+[![Snapshot](https://img.shields.io/badge/Snapshot-2.0.0-SNAPSHOT-orange)](https://github.com/GuicedEE/Packages/packages/maven/com.guicedee.websockets)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue)](https://www.apache.org/licenses/LICENSE-2.0)
 
 ![Java 25+](https://img.shields.io/badge/Java-25%2B-green)
@@ -93,14 +93,21 @@ Clients connect to `ws://localhost:8080` and send JSON:
 
 ## 📐 Architecture
 
-```
-Startup
-  IGuiceContext.instance()
-   └─ VertxWebServerPostStartup              (from web module — creates HTTP server)
-       └─ VertxSocketHttpWebSocketConfigurator
-           ├─ HttpServerOptions builder       (compression, frame sizes)
-           ├─ HttpServer builder              (registers webSocketHandler)
-           └─ Router builder                  (no-op — WebSockets bypass the router)
+```mermaid
+flowchart TD
+    n1["Startup"]
+    n2["IGuiceContext.instance()"]
+    n1 --> n2
+    n3["VertxWebServerPostStartup<br/>from web module — creates HTTP server"]
+    n2 --> n3
+    n4["VertxSocketHttpWebSocketConfigurator"]
+    n3 --> n4
+    n5["HttpServerOptions builder<br/>compression, frame sizes"]
+    n4 --> n5
+    n6["HttpServer builder<br/>registers webSocketHandler"]
+    n4 --> n6
+    n7["Router builder<br/>no-op — WebSockets bypass the router"]
+    n4 --> n7
 ```
 
 ### Connection lifecycle
@@ -345,25 +352,34 @@ WebSocket connections run inside Guice's `@CallScope`. The following are availab
 
 ## 🔄 Startup Flow
 
-```
-IGuiceContext.instance()
- └─ IGuiceModule hooks
-     └─ VertxWebSocketsModule           (binds ServerWebSocket, IGuicedWebSocket, SPI multibinders)
- └─ IGuicePostStartup hooks
-     └─ VertxSocketHttpWebSocketConfigurator (sortOrder = 55)
-         ├─ HttpServerOptions builder    (applies WebSocketServerOptions)
-         ├─ HttpServer builder           (registers webSocketHandler with group/scope setup)
-         └─ Router builder               (no-op pass-through)
+```mermaid
+flowchart TD
+    n1["IGuiceContext.instance()"]
+    n2["IGuiceModule hooks"]
+    n1 --> n2
+    n3["VertxWebSocketsModule<br/>binds ServerWebSocket, IGuicedWebSocket, SPI multibinders"]
+    n2 --> n3
+    n4["IGuicePostStartup hooks"]
+    n1 --> n4
+    n5["VertxSocketHttpWebSocketConfigurator<br/>sortOrder = 55"]
+    n4 --> n5
+    n6["HttpServerOptions builder<br/>applies WebSocketServerOptions"]
+    n5 --> n6
+    n7["HttpServer builder<br/>registers webSocketHandler with group/scope setup"]
+    n5 --> n7
+    n8["Router builder<br/>no-op pass-through"]
+    n5 --> n8
 ```
 
 ## 🗺️ Module Graph
 
-```
-com.guicedee.vertx.sockets
- ├── com.guicedee.vertx.web          (HTTP server, Router, BodyHandler)
- ├── com.guicedee.client             (CallScope, SPI contracts, IGuicedWebSocket)
- ├── io.vertx.core                   (Vertx, ServerWebSocket, EventBus)
- └── org.jspecify                    (nullability annotations)
+```mermaid
+flowchart LR
+    com_guicedee_vertx_sockets["com.guicedee.vertx.sockets"]
+    com_guicedee_vertx_sockets --> com_guicedee_vertx_web["com.guicedee.vertx.web<br/>HTTP server, Router, BodyHandler"]
+    com_guicedee_vertx_sockets --> com_guicedee_client["com.guicedee.client<br/>CallScope, SPI contracts, IGuicedWebSocket"]
+    com_guicedee_vertx_sockets --> io_vertx_core["io.vertx.core<br/>Vertx, ServerWebSocket, EventBus"]
+    com_guicedee_vertx_sockets --> org_jspecify["org.jspecify<br/>nullability annotations"]
 ```
 
 ## 🧩 JPMS
