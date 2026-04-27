@@ -2,7 +2,7 @@
 
 [![Build](https://github.com/GuicedEE/GuicedVertxSockets/actions/workflows/build.yml/badge.svg)](https://github.com/GuicedEE/GuicedVertxSockets/actions/workflows/build.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/com.guicedee/websockets)](https://central.sonatype.com/artifact/com.guicedee/websockets)
-[![Snapshot](https://img.shields.io/badge/Snapshot-2.0.0-SNAPSHOT-orange)](https://github.com/GuicedEE/Packages/packages/maven/com.guicedee.websockets)
+[![Snapshot](https://img.shields.io/badge/Snapshot-2.0.1-SNAPSHOT-SNAPSHOT-orange)](https://github.com/GuicedEE/Packages/packages/maven/com.guicedee.websockets)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue)](https://www.apache.org/licenses/LICENSE-2.0)
 
 ![Java 25+](https://img.shields.io/badge/Java-25%2B-green)
@@ -28,7 +28,7 @@ Built on [Vert.x](https://vertx.io/) · [Google Guice](https://github.com/google
 <summary>Gradle (Kotlin DSL)</summary>
 
 ```kotlin
-implementation("com.guicedee:websockets:2.0.0-RC11")
+implementation("com.guicedee:websockets:2.0.1-SNAPSHOT")
 ```
 </details>
 

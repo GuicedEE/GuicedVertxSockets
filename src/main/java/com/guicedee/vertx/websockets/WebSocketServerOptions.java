@@ -10,7 +10,7 @@ import org.jspecify.annotations.NonNull;
  * This injectable singleton allows applications to customize WebSocket
  * server settings without modifying the framework configuration.
  * 
- * @since 2.0.0
+ * @since 2.0.1-SNAPSHOT
  */
 @Data
 @Singleton
