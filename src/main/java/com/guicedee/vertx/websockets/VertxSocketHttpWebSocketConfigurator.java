@@ -133,66 +133,70 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
                         .injectMembers(this)
                 ;
             }
-            callScoper.scope(Key.get(ServerWebSocket.class), () -> ctx);
-            CallScopeProperties properties = IGuiceContext.get(CallScopeProperties.class);
-            String id = ctx.textHandlerID();
-            properties.setSource(WebSocket);
-            properties
-                    .getProperties()
-                    .put("RequestContextId", id);
+            callScoper.enter();
+            try {
+                callScoper.seed(Key.get(ServerWebSocket.class), ctx);
+                CallScopeProperties properties = IGuiceContext.get(CallScopeProperties.class);
+                String id = ctx.textHandlerID();
+                properties.setSource(WebSocket);
+                properties
+                        .getProperties()
+                        .put("RequestContextId", id);
 
-            configureGroupListener(vertx, EveryoneGroup, ctx);
+                configureGroupListener(vertx, EveryoneGroup, ctx);
 
-            //create my group id on connect
-            groupConsumers.put(id, new ArrayList<>());
-            groupCallScopeProperties.put(id, properties);
+                //create my group id on connect
+                groupConsumers.put(id, new ArrayList<>());
+                groupCallScopeProperties.put(id, properties);
 
-            configureGroupListener(vertx, id, ctx);
+                configureGroupListener(vertx, id, ctx);
 
-            //what happens on a message received
-            ctx
-                    .textMessageHandler((msg) -> {
-                        processMessageInContext(ctx, msg, properties)
-                                .subscribe()
-                                .with(
-                                        v -> {
-                                        },
-                                        e -> log.error("WebSocket message processing failed", e)
-                                )
-                        ;
-                    })
-                    .exceptionHandler((e) -> {
-                        log.error("Exception on web handler", e);
-                        groupSockets.forEach((key, value) -> {
-                            value.removeIf(a -> a
-                                    .textHandlerID()
-                                    .equals(id));
-                        });
-                        groupConsumers.forEach((key, value) -> {
-                            value.removeIf(a -> a
-                                    .address()
-                                    .equals(id));
-                        });
-                        groupCallScopeProperties.remove(id);
-                    })
-                    .closeHandler((__) -> {
-                        groupSockets.forEach((key, value) -> {
-                            value.removeIf(a -> a
-                                    .textHandlerID()
-                                    .equals(id));
-                        });
-                        groupConsumers.forEach((key, value) -> {
-                            value.removeIf(a -> a
-                                    .address()
-                                    .equals(id));
-                        });
-                        groupCallScopeProperties.remove(id);
-                    })
-            ;
+                //what happens on a message received
+                ctx
+                        .textMessageHandler((msg) -> {
+                            processMessageInContext(ctx, msg, properties)
+                                    .subscribe()
+                                    .with(
+                                            v -> {
+                                            },
+                                            e -> log.error("WebSocket message processing failed", e)
+                                    )
+                            ;
+                        })
+                        .exceptionHandler((e) -> {
+                            log.error("Exception on web handler", e);
+                            groupSockets.forEach((key, value) -> {
+                                value.removeIf(a -> a
+                                        .textHandlerID()
+                                        .equals(id));
+                            });
+                            groupConsumers.forEach((key, value) -> {
+                                value.removeIf(a -> a
+                                        .address()
+                                        .equals(id));
+                            });
+                            groupCallScopeProperties.remove(id);
+                        })
+                        .closeHandler((__) -> {
+                            groupSockets.forEach((key, value) -> {
+                                value.removeIf(a -> a
+                                        .textHandlerID()
+                                        .equals(id));
+                            });
+                            groupConsumers.forEach((key, value) -> {
+                                value.removeIf(a -> a
+                                        .address()
+                                        .equals(id));
+                            });
+                            groupCallScopeProperties.remove(id);
+                        })
+                ;
 
-            log.debug("Client connected: " + ctx.remoteAddress() + " / " + id);
-            //add to default groups, everyone and me
-
+                log.debug("Client connected: " + ctx.remoteAddress() + " / " + id);
+                //add to default groups, everyone and me
+            } finally {
+                callScoper.exit();
+            }
         });
         return builder;
     }
@@ -235,18 +239,28 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
         return io.smallrye.mutiny.Uni
                 .createFrom()
                 .deferred(() -> {
-                    callScoper.scope(Key.get(ServerWebSocket.class), () -> ctx);
-                    CallScopeProperties props = IGuiceContext.get(CallScopeProperties.class);
-                    props.setSource(properties.getSource());
-                    properties
-                            .getProperties()
-                            .put("ServerWebSocket", ctx);
-                    props
-                            .getProperties()
-                            .putAll(properties.getProperties());
-                    GuicedWebSocket guicedWebSocket = (GuicedWebSocket) IGuiceContext.get(IGuicedWebSocket.class);
-                    return guicedWebSocket
-                            .receiveMessage(msg);
+                    callScoper.enter();
+                    try {
+                        callScoper.seed(Key.get(ServerWebSocket.class), ctx);
+                        CallScopeProperties props = IGuiceContext.get(CallScopeProperties.class);
+                        props.setSource(properties.getSource());
+                        properties
+                                .getProperties()
+                                .put("ServerWebSocket", ctx);
+                        props
+                                .getProperties()
+                                .putAll(properties.getProperties());
+                        GuicedWebSocket guicedWebSocket = (GuicedWebSocket) IGuiceContext.get(IGuicedWebSocket.class);
+                        return guicedWebSocket
+                                .receiveMessage(msg)
+                                .eventually(() -> {
+                                    callScoper.exit();
+                                    return io.smallrye.mutiny.Uni.createFrom().voidItem();
+                                });
+                    } catch (Throwable t) {
+                        callScoper.exit();
+                        return io.smallrye.mutiny.Uni.createFrom().failure(t);
+                    }
                 });
 
     }
