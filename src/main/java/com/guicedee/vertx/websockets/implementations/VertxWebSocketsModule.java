@@ -18,8 +18,6 @@ import io.vertx.core.http.ServerWebSocket;
  * 
  * Configures DI bindings for WebSocket-related classes and provides
  * multibinder extension points for SPI handlers.
- * 
- * @since 2.0.2-SNAPSHOT
  */
 public class VertxWebSocketsModule extends AbstractModule implements IGuiceModule<VertxWebSocketsModule>
 {

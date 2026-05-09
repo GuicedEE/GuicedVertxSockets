@@ -8,8 +8,6 @@ import org.jspecify.annotations.Nullable;
  * 
  * This exception is thrown when WebSocket operations fail, replacing checked Exception
  * throughout the codebase to improve API clarity and error handling.
- * 
- * @since 2.0.2-SNAPSHOT
  */
 public class WebSocketException extends RuntimeException {
     
