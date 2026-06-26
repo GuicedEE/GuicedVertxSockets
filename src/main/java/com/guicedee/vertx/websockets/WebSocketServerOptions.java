@@ -15,9 +15,19 @@ import org.jspecify.annotations.NonNull;
 @Singleton
 public class WebSocketServerOptions {
     
-    /** Enable per-message WebSocket compression (RFC 7692). Default: true */
-    private boolean perMessageCompressionSupported = true;
-    
+    /**
+     * Enable per-message WebSocket compression (RFC 7692 / permessage-deflate). Default: false.
+     *
+     * <p>Defaults to {@code false} on purpose. permessage-deflate is only a bandwidth optimization,
+     * but several browser STOMP clients (notably {@code @stomp/stompjs}) drop a freshly-upgraded
+     * WebSocket immediately when the server negotiates the deflate extension - surfacing server-side
+     * as an instant {@code HttpClosedException} and client-side as a code 1006 close. Because all
+     * {@code VertxHttpServerOptionsConfigurator}s now share a single {@link io.vertx.core.http.HttpServerOptions}
+     * instance, forcing this {@code true} here would clobber other configurators (e.g. JWebMP/STOMP)
+     * that disable it. Leave it {@code false} unless an application explicitly opts back in.</p>
+     */
+    private boolean perMessageCompressionSupported = false;
+
     /** Compression level (0-9). Default: 9 */
     private int compressionLevel = 9;
     

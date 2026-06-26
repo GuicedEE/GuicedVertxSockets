@@ -1,6 +1,6 @@
 package com.guicedee.vertx.websockets;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.guicedee.client.IGuiceContext;
