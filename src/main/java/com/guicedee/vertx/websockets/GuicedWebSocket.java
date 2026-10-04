@@ -39,6 +39,11 @@ import java.util.concurrent.ExecutionException;
 @Log4j2
 public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocket
 {
+    public GuicedWebSocket() { }
+    public GuicedWebSocket(Vertx vertx, CallScopeProperties properties) {
+        this.vertx = java.util.Objects.requireNonNull(vertx);
+        this.callScopeProperties = java.util.Objects.requireNonNull(properties);
+    }
     @Inject
     private CallScopeProperties callScopeProperties;
 
@@ -172,13 +177,7 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
             }
             if(!performed.get()) {
 
-                if (!VertxSocketHttpWebSocketConfigurator.groupSockets.containsKey(groupName)) {
-                    log.warn("WS Group " + groupName + " not found, creating empty placeholder");
-                    VertxSocketHttpWebSocketConfigurator.groupSockets.put(groupName, new ArrayList<>());
-                }
-                VertxSocketHttpWebSocketConfigurator.groupSockets.get(groupName).forEach(socket -> {
-                    writeMessageToSocket(message, socket);
-                });
+                vertx.eventBus().publish(groupName, message);
             }
         } catch (InterruptedException e) {
             throw new WebSocketException("Interrupted while broadcasting to " + groupName, e);
@@ -196,7 +195,13 @@ public class GuicedWebSocket extends AbstractVerticle implements IGuicedWebSocke
      */
     public static synchronized void writeMessageToSocket(@NonNull String message, @NonNull ServerWebSocket socket)
     {
-        socket.writeTextMessage(message);
+        if (socket.isClosed()) { VertxSocketHttpWebSocketConfigurator.removeSocket(socket); return; }
+        if (message.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 1024 * 1024 || socket.writeQueueFull()) {
+            VertxSocketHttpWebSocketConfigurator.removeSocket(socket);
+            com.guicedee.vertx.WebSocketBackpressure.close(socket, (short) 1013, "Slow consumer");
+            return;
+        }
+        socket.writeTextMessage(message).onFailure(ignored -> VertxSocketHttpWebSocketConfigurator.removeSocket(socket));
     }
 
     /**

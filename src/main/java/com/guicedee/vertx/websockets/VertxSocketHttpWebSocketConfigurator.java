@@ -100,18 +100,24 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
      * @param group     the group name
      * @param webSocket the WebSocket connection
      */
-    public static void removeFromGroup(String group, ServerWebSocket webSocket) {
-        if (groupSockets.containsKey(group)) {
-            groupSockets
-                    .get(group)
-                    .remove(webSocket);
-            if (groupSockets
-                    .get(group)
-                    .isEmpty() && !EveryoneGroup.equalsIgnoreCase(group)) {
-                groupSockets.remove(group);
-            }
-
+    public static synchronized void removeFromGroup(String group, ServerWebSocket webSocket) {
+        var sockets = groupSockets.get(group);
+        if (sockets == null) return;
+        sockets.remove(webSocket);
+        if (sockets.isEmpty()) {
+            groupSockets.remove(group);
+            var consumers = groupConsumers.remove(group);
+            if (consumers != null) consumers.forEach(MessageConsumer::unregister);
         }
+    }
+
+    private static final Map<ServerWebSocket, String> socketContextIds = new ConcurrentHashMap<>();
+
+    public static synchronized void removeSocket(ServerWebSocket socket) {
+        for (String group : List.copyOf(groupSockets.keySet())) removeFromGroup(group, socket);
+        String handler = socketContextIds.remove(socket);
+        if (handler == null) handler = socket.textHandlerID();
+        if (handler != null) groupCallScopeProperties.remove(handler);
     }
 
     /**
@@ -137,7 +143,10 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
             try {
                 callScoper.seed(Key.get(ServerWebSocket.class), ctx);
                 CallScopeProperties properties = IGuiceContext.get(CallScopeProperties.class);
-                String id = ctx.textHandlerID();
+                String handlerId = ctx.textHandlerID();
+                String id = handlerId == null ? java.util.UUID.randomUUID().toString() : handlerId;
+                socketContextIds.put(ctx, id);
+                ctx.setWriteQueueMaxSize(65536);
                 properties.setSource(WebSocket);
                 properties
                         .getProperties()
@@ -165,31 +174,9 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
                         })
                         .exceptionHandler((e) -> {
                             log.error("Exception on web handler", e);
-                            groupSockets.forEach((key, value) -> {
-                                value.removeIf(a -> a
-                                        .textHandlerID()
-                                        .equals(id));
-                            });
-                            groupConsumers.forEach((key, value) -> {
-                                value.removeIf(a -> a
-                                        .address()
-                                        .equals(id));
-                            });
-                            groupCallScopeProperties.remove(id);
+                            removeSocket(ctx);
                         })
-                        .closeHandler((__) -> {
-                            groupSockets.forEach((key, value) -> {
-                                value.removeIf(a -> a
-                                        .textHandlerID()
-                                        .equals(id));
-                            });
-                            groupConsumers.forEach((key, value) -> {
-                                value.removeIf(a -> a
-                                        .address()
-                                        .equals(id));
-                            });
-                            groupCallScopeProperties.remove(id);
-                        })
+                        .closeHandler((__) -> removeSocket(ctx))
                 ;
 
                 log.debug("Client connected: " + ctx.remoteAddress() + " / " + id);
@@ -208,7 +195,10 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
      * @param group     the group name
      * @param webSocket the WebSocket connection
      */
-    public static void configureGroupListener(Vertx vertx, String group, ServerWebSocket webSocket) {
+    public static synchronized void configureGroupListener(Vertx vertx, String group, ServerWebSocket webSocket) {
+        if (group == null || group.length() > 256) throw new IllegalArgumentException("Invalid WebSocket group");
+        if (!groupSockets.containsKey(group) && groupSockets.size() >= 4096)
+            throw new IllegalStateException("WebSocket group capacity reached");
         if (!groupConsumers.containsKey(group) || groupConsumers
                 .get(group)
                 .isEmpty()) {
@@ -218,7 +208,8 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
                     .eventBus()
                     .consumer(group, message -> {
                         List<ServerWebSocket> serverWebSockets = groupSockets.get(group);
-                        for (ServerWebSocket serverWebSocket : serverWebSockets) {
+                        if (serverWebSockets == null) return;
+                        for (ServerWebSocket serverWebSocket : List.copyOf(serverWebSockets)) {
                             GuicedWebSocket.writeMessageToSocket(message.body(), serverWebSocket);
                             //serverWebSocket.writeTextMessage((String) message.body());
                         }
@@ -230,9 +221,9 @@ public class VertxSocketHttpWebSocketConfigurator implements IGuicePostStartup<V
         if (!groupSockets.containsKey(group)) {
             groupSockets.put(group, new CopyOnWriteArrayList<>());
         }
-        groupSockets
-                .get(group)
-                .add(webSocket);
+        var sockets = groupSockets.get(group);
+        if (sockets.size() >= 4096) throw new IllegalStateException("WebSocket recipient capacity reached");
+        if (!sockets.contains(webSocket)) sockets.add(webSocket);
     }
 
     private io.smallrye.mutiny.Uni<Void> processMessageInContext(ServerWebSocket ctx, String msg, CallScopeProperties properties) {
